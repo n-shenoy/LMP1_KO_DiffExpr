@@ -17,7 +17,7 @@ http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeCaltechRnaSeq/w
 ```
 
 ### LMP1 KO RNA
-The RNA sequence data for LMP1 knockout LCLs came from Mitra et al, 2023, (GEO Accession ID GSE228167) and consists of three replicates. The data can be obtained from:
+The RNA sequence data for LMP1 knockout LCLs came from Mitra et al 2023, (GEO Accession ID GSE228167) generated from the GM12878 cell lines and consists of three replicates. The data can be obtained from:
 ```Bash
 #Replicate 1
 #wget -O reads1.fastq.gz ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR239/010/SRR23957810/SRR23957810_1.fastq.gz
