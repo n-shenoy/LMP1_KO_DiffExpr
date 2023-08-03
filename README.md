@@ -33,7 +33,7 @@ The RNA sequence data for LMP1 knockout LCLs came from Mitra et al 2023, (GEO Ac
 
 `fastqc` contains quality reports for raw and processed reads.
 
-The bash scripts for the complete RNA-Seq pipeline can be found in `shell_scripts`.
+The bash script for the complete RNA-Seq pipeline can be found in `script.sh`.
 
 References:
 1. [Mitra et al. (2023).](https://www.biorxiv.org/content/10.1101/2023.04.10.536234v1.full) Characterization of Target Gene Regulation by the Two Epstein-Barr Virus Oncogene LMP1 Domains Essential for B-cell Transformation.
