@@ -20,7 +20,7 @@ library("org.Hs.eg.db")
 #-------Read in the counts matrix--------#
 
 counts_matrix <- read.csv("counts/counts_matrix_5_samples.csv", header = TRUE, 
-row.names = 1, sep = "\t", skip = 1)
+                          row.names = 1, sep = "\t", skip = 1)
 
 #change column names to reflect sample IDs
 colnames(counts_matrix) <- c("Control_Rep2", "Control_Rep3",
@@ -74,7 +74,7 @@ sigs
 #map gene IDs to gene names 
 sigs.df <- as.data.frame(sigs)
 sigs.df$symbol <- ensembldb::mapIds(EnsDb.Hsapiens.v86, keys = row.names(sigs.df), 
-                               keytype = "GENEID", column = "SYMBOL")
+                                    keytype = "GENEID", column = "SYMBOL")
 
 
 #use gene ID as gene name for genes that did not 
@@ -90,10 +90,6 @@ for(i in seq_along(sigs.df$symbol)){
 #we need it later
 sigs.df.copy <- sigs.df
 
-#filter out genes with low lcf, p-values above 0.005, and base mean above 100
-#used strict criteria as we have >2700 genes
-sigs.df <- sigs.df[(sigs.df$padj < 0.005) & (sigs.df$baseMean > 100) 
-                   & (abs(sigs.df$log2FoldChange) > 8), ] 
 
 
 #-----------Visualization------------#
@@ -116,7 +112,7 @@ select.genes <-  c("EBI3", "CCL22", "CD40", "MDM2","BATF",
 keyvals <- ifelse(
     sigs.df.copy$log2FoldChange < -1, '#3ebdc8',
     ifelse(sigs.df.copy$log2FoldChange > 1, '#F6BE00',
-   'darkgrey'))
+           'darkgrey'))
 
 #reorder df
 x <- sigs.df.copy$symbol %in% select.genes
@@ -125,7 +121,7 @@ sigs.reordered <- rbind(sigs.df.copy[!x,], sigs.df.copy[x,])
 #generate key-value pairs to change color and label schemes
 keyvals <- ifelse(
     sigs.reordered$symbol %in% select.genes, 
-    ifelse(sigs.reordered$log2FoldChange < -0, '#3ebdc8',
+    ifelse(sigs.reordered$log2FoldChange < 0, '#3ebdc8',
            ifelse(sigs.reordered$log2FoldChange > 0, '#F6BE00', 
                   'darkgrey')),
     'darkgrey'
@@ -148,23 +144,31 @@ EnhancedVolcano(sigs.reordered, x = "log2FoldChange", y = "padj", lab = sigs.reo
                 colCustom = keyvals,
                 colAlpha = (ifelse(sigs.reordered$symbol %in% select.genes, 15, 0.8)),
                 axisLabSize = 10,
-                legendPosition = 'none')
+                legendPosition = 'none',    
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                xlim = c(-27,27))
 
 
 #Heatmap
 #get normalized counts for significant genes from the dds object
-mat <- counts(dds, normalized = TRUE)[rownames(sigs.df), ]
+mat <- counts(dds, normalized = TRUE)[rownames(sigs.df.copy), ]
 
 #get the z-score for each row
 mat.z <- t(apply(mat, 1, scale))
 colnames(mat.z) <- colnames(mat)
 
+
 Heatmap(mat.z, cluster_rows = TRUE, cluster_columns = TRUE, column_labels = colnames(mat.z), 
-        name = "Z-score", row_labels = sigs.df[rownames(mat.z),]$symbol,
-        row_names_gp = grid::gpar(fontsize = 3), column_names_gp = grid::gpar(fontsize = 4),
-        row_names_side = "left", column_names_side = "top", column_names_rot = 0, 
+        name = "Z-score", 
+        column_names_gp = grid::gpar(fontsize = 6),
+        column_names_side = "top", column_names_rot = 0, 
         column_names_centered = TRUE,
-        col = c("#0056b3","white","#ff0055"))
+        col = c("#0056b3","white","#ff0055"),
+        show_row_names = FALSE,
+        show_row_dend = FALSE,
+        km = 2)
+
 
 
 #-------------Gene Ontology------------#
@@ -182,7 +186,7 @@ upreg <- upreg.pathways %>% dplyr::arrange(desc(Count))
 head(upreg)
 
 #plot upregulated pathways
-fit_upreg <- plot(barplot(upreg, showCategory = 20))
+fit_upreg <- plot(barplot(upreg.pathways, showCategory = 20))
 
 #plot only top 10 
 ggplot(upreg[1:10,], aes(y = reorder(Description, +Count), x = Count, fill = p.adjust)) + 
@@ -226,7 +230,7 @@ names(genes_list) <- rownames(sigs.df.copy)
 
 #run GSEA
 gsea.go <- gseGO(genes_list, ont = "BP", keyType = "ENSEMBL", 
-             OrgDb = "org.Hs.eg.db", eps = 1e-300)
+                 OrgDb = "org.Hs.eg.db")
 
 gsea.df <- as.data.frame(gsea.go)
 gsea.df.desc <- gsea.df[order(-gsea.df$NES), ]
@@ -243,6 +247,8 @@ gseaplot(gsea.go, geneSetID = which(gsea.df$Description == gsea.df.desc$Descript
          title = gsea.df.desc$Description[n-2])
 
 
+#Ridge plot
+ridgeplot(gsea.go) + labs(x = "enrichment distribution")
 
 #--------------GSEA KEGG-----------------#
 
@@ -250,7 +256,7 @@ gseaplot(gsea.go, geneSetID = which(gsea.df$Description == gsea.df.desc$Descript
 # We will lose some genes here because not all IDs will be converted
 sigs.entrez <- sigs.df.copy
 sigs.entrez$entrezId <- ensembldb::mapIds(EnsDb.Hsapiens.v86, keys = row.names(sigs.df.copy), 
-                  keytype = "GENEID", column = "ENTREZID")
+                                          keytype = "GENEID", column = "ENTREZID")
 
 # omit any NA values 
 sigs.entrez <- na.omit(sigs.entrez)
@@ -290,8 +296,8 @@ kegg_gene_list = sort(kegg_gene_list, decreasing = TRUE)
 
 #create KEGG object
 gsea.kegg <- gseKEGG(kegg_gene_list, organism = "hsa", 
-               minGSSize = 1, maxGSSize = 20000, pvalueCutoff = 0.05,
-               pAdjustMethod = "BH", keyType = "ncbi-geneid")
+                     minGSSize = 1, maxGSSize = 20000, pvalueCutoff = 0.05,
+                     pAdjustMethod = "BH", keyType = "ncbi-geneid")
 
 kegg.df <- as.data.frame(gsea.kegg) 
 
@@ -318,5 +324,3 @@ ridgeplot(gsea.kegg2) + labs(x = "enrichment distribution")
 gseaplot(gsea.kegg, by = "all", title = gsea.kegg$Description[1], geneSetID = 1)
 gseaplot(gsea.kegg, by = "all", title = gsea.kegg$Description[2], geneSetID = 2)
 gseaplot(gsea.kegg, by = "all", title = gsea.kegg$Description[3], geneSetID = 3)
-
-
