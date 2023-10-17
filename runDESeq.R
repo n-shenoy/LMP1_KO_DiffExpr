@@ -324,3 +324,4 @@ ridgeplot(gsea.kegg2) + labs(x = "enrichment distribution")
 gseaplot(gsea.kegg, by = "all", title = gsea.kegg$Description[1], geneSetID = 1)
 gseaplot(gsea.kegg, by = "all", title = gsea.kegg$Description[2], geneSetID = 2)
 gseaplot(gsea.kegg, by = "all", title = gsea.kegg$Description[3], geneSetID = 3)
+
